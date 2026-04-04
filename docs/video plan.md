@@ -12,3 +12,6 @@ Structure:
 
 ## Language used
 Java - explain why I am using Java in the introduction
+
+## State machine diagram
+![State machine diagram](state-machine-diagram.png)
