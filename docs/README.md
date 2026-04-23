@@ -33,6 +33,10 @@ Packages:
 
 ## Section 3: Design Patterns Used 
 list each pattern with a one-sentence justification
+Repository Pattern used (Fowler, 2002). 
+
+I used the Repository Pattern so that IdentityManager depends on an interface, not a concrete class. This separates 
+storage from business logic and makes testing straightforward without a real database. The service layer only cares WHAT storage can do (defined here), not HOW it does it (defined in InMemoryIdentityRepository).
 
 ## Section 4: How to Run 
 step-by-step commands (python -m pytest, python main.py)
