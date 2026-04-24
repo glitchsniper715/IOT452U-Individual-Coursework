@@ -1,10 +1,9 @@
 # IOT452U-Individual-Coursework
 
 ## Section 1: Project Overview 
-2 paragraphs describing the system and scenario
+Describing the system and scenario
 
-## Section 2: System Architecture 
-copy your folder structure, briefly explain each package
+## Section 2: System Architecture
 Layered architecture
 Each package has a single responsibility
 
@@ -32,17 +31,13 @@ Packages:
   - Ensures separation of concern
 
 ## Section 3: Design Patterns Used 
-list each pattern with a one-sentence justification
-Repository Pattern used (Fowler, 2002). 
+Repository Pattern
 
 I used the Repository Pattern so that IdentityManager depends on an interface, not a concrete class. This separates 
 storage from business logic and makes testing straightforward without a real database. The service layer only cares WHAT storage can do (defined here), not HOW it does it (defined in InMemoryIdentityRepository).
 
 ## Section 4: How to Run 
-step-by-step commands (python -m pytest, python main.py)
+step-by-step commands
 
 ## Section 5: GitHub Repository Link
 https://github.com/sm325om/IOT452U-Individual-Coursework
-
-## Section 6: References 
-APA format, at least 3 sources
