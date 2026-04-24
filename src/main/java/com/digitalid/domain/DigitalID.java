@@ -73,7 +73,7 @@ public class DigitalID {
         this.temporaryRestriction = restricted;
     }
 
-    void addAuditEntry(AuditEntry entry) {
+    public void addAuditEntry(AuditEntry entry) {
         auditLog.add(entry);
     }
 
