@@ -57,19 +57,19 @@ public class DigitalID {
         this.temporaryRestriction = false;
     }
 
-    void setFullName(String fullName) {
+    public void setFullName(String fullName) {
         this.fullName = fullName;
     }
 
-    void setAddress(String address) {
+    public void setAddress(String address) {
         this.address = address;
     }
 
-    void setNationality(String nationality) {
+    public void setNationality(String nationality) {
         this.nationality = nationality;
     }
 
-    void setTemporaryRestriction(boolean restricted) {
+    public void setTemporaryRestriction(boolean restricted) {
         this.temporaryRestriction = restricted;
     }
 
