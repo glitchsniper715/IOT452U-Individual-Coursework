@@ -34,65 +34,52 @@ class DigitalIDTest {
         );
     }
 
-    /** The idNumber passed in must be stored and returned unchanged */
     @Test
     void constructor_storesIdNumber_correctly() {
         assertEquals(TEST_ID_NUMBER, digitalID.getIdNumber());
     }
 
-    /** fullName is a mutable field but must be stored correctly at creation */
     @Test
     void constructor_storesFullName_correctly() {
         assertEquals(TEST_FULL_NAME, digitalID.getFullName());
     }
 
-    /** dateOfBirth is an immutable field - it must be stored exactly as passed */
     @Test
     void constructor_storesDateOfBirth_correctly() {
         assertEquals(TEST_DOB, digitalID.getDateOfBirth());
     }
 
-    /** placeOfBirth is an immutable field - it must be stored exactly as passed */
     @Test
     void constructor_storesPlaceOfBirth_correctly() {
         assertEquals(TEST_PLACE_OF_BIRTH, digitalID.getPlaceOfBirth());
     }
 
-    /** address is a mutable field but must be stored correctly at creation */
     @Test
     void constructor_storesAddress_correctly() {
         assertEquals(TEST_ADDRESS, digitalID.getAddress());
     }
 
-    /** nationality is a mutable field but must be stored correctly at creation */
     @Test
     void constructor_storesNationality_correctly() {
         assertEquals(TEST_NATIONALITY, digitalID.getNationality());
     }
 
-    /**
-     * Every new Digital ID must start as ACTIVE.
-     */
     @Test
     void constructor_setsStatus_toActiveByDefault() {
         assertEquals(IDStatus.ACTIVE, digitalID.getStatus());
     }
 
-    /**
-     * No temporary restriction should be applied on creation.
-     */
+
     @Test
     void constructor_setsTemporaryRestriction_toFalseByDefault() {
         assertFalse(digitalID.isTemporaryRestriction());
     }
 
-    /** A brand new Digital ID has an empty audit log */
     @Test
     void constructor_createsEmptyAuditLog() {
         assertTrue(digitalID.getAuditLog().isEmpty());
     }
 
-    /** getAuditLog() returns an unmodifiable list. Callers must not be able to add entries directly and bypass the audit trail */
     @Test
     void getAuditLog_returnsUnmodifiableList_soCallerCannotAddEntries() {
         assertThrows(UnsupportedOperationException.class, () ->
@@ -102,21 +89,18 @@ class DigitalIDTest {
         );
     }
 
-    /** ACTIVE to SUSPENDED is a valid transition */
     @Test
     void transitionStatus_activeToSuspended_succeeds() {
         assertDoesNotThrow(() -> digitalID.transitionStatus(IDStatus.SUSPENDED, PERFORMED_BY));
         assertEquals(IDStatus.SUSPENDED, digitalID.getStatus());
     }
 
-    /** ACTIVE to REVOKED is a valid transition */
     @Test
     void transitionStatus_activeToRevoked_succeeds() {
         assertDoesNotThrow(() -> digitalID.transitionStatus(IDStatus.REVOKED, PERFORMED_BY));
         assertEquals(IDStatus.REVOKED, digitalID.getStatus());
     }
 
-    /** SUSPENDED to ACTIVE is a valid transition */
     @Test
     void transitionStatus_suspendedToActive_succeeds() {
         digitalID.transitionStatus(IDStatus.SUSPENDED, PERFORMED_BY);
@@ -124,7 +108,6 @@ class DigitalIDTest {
         assertEquals(IDStatus.ACTIVE, digitalID.getStatus());
     }
 
-    /** SUSPENDED to REVOKED is a valid transition */
     @Test
     void transitionStatus_suspendedToRevoked_succeeds() {
         digitalID.transitionStatus(IDStatus.SUSPENDED, PERFORMED_BY);
@@ -132,7 +115,6 @@ class DigitalIDTest {
         assertEquals(IDStatus.REVOKED, digitalID.getStatus());
     }
 
-    /** REVOKED to ACTIVE must be rejected */
     @Test
     void transitionStatus_revokedToActive_throwsInvalidTransitionException() {
         digitalID.transitionStatus(IDStatus.REVOKED, PERFORMED_BY);
@@ -143,7 +125,6 @@ class DigitalIDTest {
         assertEquals(IDStatus.REVOKED, digitalID.getStatus());
     }
 
-    /** REVOKED to SUSPENDED must be rejected */
     @Test
     void transitionStatus_revokedToSuspended_throwsInvalidTransitionException() {
         digitalID.transitionStatus(IDStatus.REVOKED, PERFORMED_BY);
@@ -154,7 +135,6 @@ class DigitalIDTest {
         assertEquals(IDStatus.REVOKED, digitalID.getStatus());
     }
 
-    /** Transitioning to the same status does nothing */
     @Test
     void transitionStatus_sameStatus_isIdempotentAndCreatesNoAuditEntry() {
         assertDoesNotThrow(() -> digitalID.transitionStatus(IDStatus.ACTIVE, PERFORMED_BY));
@@ -164,7 +144,6 @@ class DigitalIDTest {
                 "No audit entry should be created when status does not change");
     }
 
-    /** A valid transition must append exactly one AuditEntry to the log */
     @Test
     void transitionStatus_validTransition_appendsOneAuditEntry() {
         digitalID.transitionStatus(IDStatus.SUSPENDED, PERFORMED_BY);
@@ -178,7 +157,6 @@ class DigitalIDTest {
         assertNotNull(entry.details());
     }
 
-    /** Multiple transitions must each create their own audit entry */
     @Test
     void transitionStatus_multipleTransitions_buildsAuditLogInOrder() {
         digitalID.transitionStatus(IDStatus.SUSPENDED, PERFORMED_BY);
@@ -192,7 +170,6 @@ class DigitalIDTest {
         );
     }
 
-    /** An invalid transition must not change the status or add an audit entry */
     @Test
     void transitionStatus_invalidTransition_doesNotChangeStatusOrAuditLog() {
         digitalID.transitionStatus(IDStatus.REVOKED, PERFORMED_BY);
@@ -207,7 +184,6 @@ class DigitalIDTest {
     }
 
 
-    /** Tests all 6 possible transitions between the three statuses in one method */
     @ParameterizedTest(name = "{0} to {1} – should throw: {2}")
     @CsvSource({
             "ACTIVE,    SUSPENDED, false",
@@ -243,7 +219,6 @@ class DigitalIDTest {
         }
     }
 
-    /** Creates a DigitalID and moves it to the given status so that parameterised tests can start from any state without duplicating setup code */
     private DigitalID buildDigitalIDAtStatus(IDStatus target) {
         DigitalID id = new DigitalID(
                 "DIG-PARAM-001",

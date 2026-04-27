@@ -34,10 +34,6 @@ class IdentityManagerTest {
 
     }
 
-    /**
-     * Verifies that a successful create() call returns a non-null, non-blank
-     * idNumber, and that the persisted DigitalID starts with ACTIVE status.
-     */
     @Test
     void create_returnsNonNullIdNumber_whenAttributesAreValid() {
         String idNumber = manager.create(validAttributes(), ORG_AUTH);
@@ -46,10 +42,6 @@ class IdentityManagerTest {
         assertFalse(idNumber.isBlank(), "idNumber must not be blank");
     }
 
-    /**
-     * Verifies that the newly created DigitalID has ACTIVE status immediately
-     * after creation — as required by the brief.
-     */
     @Test
     void create_newDigitalID_hasActiveStatusByDefault() {
         String idNumber = manager.create(validAttributes(), ORG_AUTH);
@@ -59,10 +51,6 @@ class IdentityManagerTest {
                 "Newly created DigitalID must start with ACTIVE status");
     }
 
-    /**
-     * Verifies that a BANK caller is rejected with UnauthorisedActionException
-     * before any processing occurs — authorisation is the very first step.
-     */
     @Test
     void create_throwsUnauthorisedActionException_whenCalledByBank() {
         assertThrows(UnauthorisedActionException.class,
@@ -70,10 +58,6 @@ class IdentityManagerTest {
                 "BANK must not be permitted to call create()");
     }
 
-    /**
-     * Verifies that a missing fullName causes a ValidationException whose
-     * message identifies the offending field.
-     */
     @Test
     void create_throwsValidationException_whenFullNameIsMissing() {
         Map<String, Object> attrs = validAttributes();
@@ -86,7 +70,6 @@ class IdentityManagerTest {
                 "Exception message must name the missing field");
     }
 
-    /** Returns a fully-populated valid attribute map for convenience. */
     private Map<String, Object> validAttributes() {
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("fullName",     "Jane Smith");
@@ -96,10 +79,6 @@ class IdentityManagerTest {
         return attrs;
     }
 
-    /**
-     * Verifies that a mutable field (fullName) can be updated on an ACTIVE
-     * identity and that the change is persisted to the repository.
-     */
     @Test
     void updateAttributes_succeedsAndPersistsChange_whenIDIsActive() {
         String idNumber = createTestID();
@@ -110,11 +89,6 @@ class IdentityManagerTest {
         assertEquals("Jane Smith-Updated", savedName);
     }
 
-    /**
-     * Verifies that attempting to update a REVOKED Digital ID is rejected with
-     * ValidationException — satisfying the brief requirement for deterministic
-     * handling of conflicted operations.
-     */
     @Test
     void updateAttributes_throwsValidationException_forRevokedID() {
         String idNumber = createTestID();
@@ -126,10 +100,6 @@ class IdentityManagerTest {
                 "Updating a REVOKED identity must throw ValidationException");
     }
 
-    /**
-     * Verifies that an attempt to change the immutable field 'placeOfBirth'
-     * is rejected with ImmutableFieldException.
-     */
     @Test
     void updateAttributes_throwsImmutableFieldException_whenImmutableFieldTargeted() {
         String idNumber = createTestID();
@@ -140,10 +110,6 @@ class IdentityManagerTest {
                 "Updating an immutable field must throw ImmutableFieldException");
     }
 
-    /**
-     * Verifies that changing status from ACTIVE to SUSPENDED succeeds and
-     * that the new status is persisted correctly.
-     */
     @Test
     void changeStatus_fromActiveToSuspended_succeedsAndPersistsNewStatus() {
         String idNumber = createTestID();
@@ -154,10 +120,6 @@ class IdentityManagerTest {
         assertEquals(IDStatus.SUSPENDED, newStatus);
     }
 
-    /**
-     * Verifies that after a changeStatus() call, the DigitalID's internal
-     * audit log contains at least one entry recording the status change.
-     */
     @Test
     void changeStatus_addAuditEntry_afterSuccessfulTransition() {
         String idNumber = createTestID();
@@ -167,7 +129,7 @@ class IdentityManagerTest {
         boolean hasStatusEntry = repository.findById(idNumber)
                 .getAuditLog()
                 .stream()
-                .anyMatch(e -> e.action().contains("STATUS_CHANGED"));
+                .anyMatch(e -> e.action().contains("STATUS_CHANGE"));
 
         assertTrue(hasStatusEntry,
                 "An audit entry recording the status change must be present");
@@ -186,10 +148,10 @@ class IdentityManagerTest {
 
         List<AuditEntry> entries = auditRepository.findByIdNumber(idNumber);
         boolean hasStatusEntry = entries.stream()
-                .anyMatch(e -> e.action().equals("STATUS_CHANGED"));
+                .anyMatch(e -> e.action().equals("STATUS_CHANGE"));
 
         assertTrue(hasStatusEntry,
-                "AuditRepository must contain a STATUS_CHANGED entry after changeStatus()");
+                "AuditRepository must contain a STATUS_CHANGE entry after changeStatus()");
     }
 
     private String createTestID() {

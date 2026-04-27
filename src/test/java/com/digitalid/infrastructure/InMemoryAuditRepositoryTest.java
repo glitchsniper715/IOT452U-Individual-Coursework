@@ -46,11 +46,11 @@ class InMemoryAuditRepositoryTest {
     void findByIdNumberAndDateRange_returnsOnlyEntriesWithinRange() {
         LocalDateTime now = LocalDateTime.now();
 
-        AuditEntry before = new AuditEntry(now.minusHours(5), "STATUS_CHANGED",
+        AuditEntry before = new AuditEntry(now.minusHours(5), "STATUS_CHANGE",
                 "CENTRAL_AUTHORITY", "Status changed to: SUSPENDED");
-        AuditEntry inside = new AuditEntry(now, "STATUS_CHANGED",
+        AuditEntry inside = new AuditEntry(now, "STATUS_CHANGE",
                 "CENTRAL_AUTHORITY", "Status changed to: ACTIVE");
-        AuditEntry after  = new AuditEntry(now.plusHours(5), "STATUS_CHANGED",
+        AuditEntry after  = new AuditEntry(now.plusHours(5), "STATUS_CHANGE",
                 "CENTRAL_AUTHORITY", "Status changed to: SUSPENDED");
 
         auditRepository.log(ID_NUMBER, before);

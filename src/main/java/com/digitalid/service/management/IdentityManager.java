@@ -21,7 +21,7 @@ public class IdentityManager {
 
     private static final String ACTION_CREATE = "IDENTITY_CREATED";
     private static final String ACTION_UPDATE = "IDENTITY_UPDATED";
-    private static final String ACTION_STATUS_CHANGE = "STATUS_CHANGED";
+    private static final String ACTION_STATUS_CHANGE = "STATUS_CHANGE";
 
     private static final String ATTR_FULL_NAME = "fullName";
     private static final String ATTR_DATE_OF_BIRTH = "dateOfBirth";
@@ -47,11 +47,11 @@ public class IdentityManager {
     }
 
     /**
-     *   <li><b>Authorise</b>  — only CENTRAL_AUTHORITY may create identities.</li>
-     *   <li><b>Validate</b>   — fullName, dateOfBirth, and placeOfBirth must all be present.</li>
-     *   <li><b>Generate</b>   — a UUID is assigned as the immutable idNumber.</li>
-     *   <li><b>Persist</b>    — the new DigitalID is saved to the repository.</li>
-     *   <li><b>Audit</b>      — an IDENTITY_CREATED entry is appended to the audit log.</li>
+     *  Authorise — only CENTRAL_AUTHORITY may create identities.
+     *  Validate — fullName, dateOfBirth, and placeOfBirth must all be present.
+     *  Generate — a UUID is assigned as the immutable idNumber.
+     *  Persist — the new DigitalID is saved to the repository.
+     *  Audit — an IDENTITY_CREATED entry is appended to the audit log.
      */
     public String create(Map<String, Object> attributes, OrganisationType callerType) {
 
@@ -131,7 +131,7 @@ public class IdentityManager {
 
         repository.save(digitalID);
 
-        AuditEntry statusEntry = new  AuditEntry(
+        AuditEntry statusEntry = new AuditEntry(
                 LocalDateTime.now(), ACTION_STATUS_CHANGE, callerType.name(),
                 "Status changed to: " + newStatus
         );
@@ -141,12 +141,12 @@ public class IdentityManager {
     }
 
     private void applyMutableUpdates(DigitalID digitalID, Map<String, Object> updates) {
-        if (updates.containsKey("fullName"))
-            digitalID.setFullName((String) updates.get("fullName"));
-        if (updates.containsKey("address"))
-            digitalID.setAddress((String) updates.get("address"));
-        if (updates.containsKey("nationality"))
-            digitalID.setNationality((String) updates.get("nationality"));
+        if (updates.containsKey(ATTR_FULL_NAME))
+            digitalID.setFullName((String) updates.get(ATTR_FULL_NAME));
+        if (updates.containsKey(ATTR_ADDRESS))
+            digitalID.setAddress((String) updates.get(ATTR_ADDRESS));
+        if (updates.containsKey(ATTR_NATIONALITY))
+            digitalID.setNationality((String) updates.get(ATTR_NATIONALITY));
         if (updates.containsKey("temporaryRestriction"))
             digitalID.setTemporaryRestriction((boolean) updates.get("temporaryRestriction"));
     }
