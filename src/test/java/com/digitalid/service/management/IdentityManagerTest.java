@@ -2,16 +2,19 @@ package com.digitalid.service.management;
 
 import com.digitalid.authorisation.AuthorisationService;
 import com.digitalid.authorisation.OrganisationType;
+import com.digitalid.domain.AuditEntry;
 import com.digitalid.domain.IDStatus;
 import com.digitalid.exception.UnauthorisedActionException;
 import com.digitalid.exception.ImmutableFieldException;
 import com.digitalid.exception.ValidationException;
+import com.digitalid.infrastructure.InMemoryAuditRepository;
 import com.digitalid.infrastructure.InMemoryIdentityRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,11 +24,14 @@ class IdentityManagerTest {
 
     private IdentityManager manager;
     private InMemoryIdentityRepository repository;
+    private InMemoryAuditRepository auditRepository;
 
     @BeforeEach
     void setUp() {
-        repository = new InMemoryIdentityRepository();
-        manager    = new IdentityManager(repository, new AuthorisationService());
+        repository      = new InMemoryIdentityRepository();
+        auditRepository = new InMemoryAuditRepository();
+        manager         = new IdentityManager(repository, new AuthorisationService(), auditRepository);
+
     }
 
     /**
@@ -165,6 +171,25 @@ class IdentityManagerTest {
 
         assertTrue(hasStatusEntry,
                 "An audit entry recording the status change must be present");
+    }
+
+    @Test
+    void create_doesNotThrow_whenAllAttributesPresent() {
+        assertDoesNotThrow(() -> manager.create(validAttributes(), ORG_AUTH));
+    }
+
+    @Test
+    void changeStatus_writesEntryToAuditRepository_afterSuccessfulTransition() {
+        String idNumber = createTestID();
+
+        manager.changeStatus(idNumber, IDStatus.SUSPENDED, ORG_AUTH);
+
+        List<AuditEntry> entries = auditRepository.findByIdNumber(idNumber);
+        boolean hasStatusEntry = entries.stream()
+                .anyMatch(e -> e.action().equals("STATUS_CHANGED"));
+
+        assertTrue(hasStatusEntry,
+                "AuditRepository must contain a STATUS_CHANGED entry after changeStatus()");
     }
 
     private String createTestID() {

@@ -7,6 +7,7 @@ import com.digitalid.domain.DigitalID;
 import com.digitalid.domain.IDStatus;
 import com.digitalid.exception.ImmutableFieldException;
 import com.digitalid.exception.ValidationException;
+import com.digitalid.infrastructure.AuditRepository;
 import com.digitalid.infrastructure.IdentityRepository;
 
 import java.time.LocalDate;
@@ -34,12 +35,15 @@ public class IdentityManager {
 
     private final IdentityRepository repository;
     private final AuthorisationService authService;
+    private final AuditRepository auditRepository;
 
 
     public IdentityManager(IdentityRepository repository,
-                           AuthorisationService authService) {
+                           AuthorisationService authService,
+                           AuditRepository auditRepository) {
         this.repository = repository;
         this.authService = authService;
+        this.auditRepository = auditRepository;
     }
 
     /**
@@ -62,8 +66,10 @@ public class IdentityManager {
         LocalDate dateOfBirth = (LocalDate) attributes.get(ATTR_DATE_OF_BIRTH);
         String placeOfBirth = (String) attributes.get(ATTR_PLACE_OF_BIRTH);
 
-        String address = attributes.containsKey(ATTR_ADDRESS) ? (String) attributes.get(ATTR_ADDRESS) : "";
-        String nationality = attributes.containsKey(ATTR_NATIONALITY) ? (String) attributes.get(ATTR_NATIONALITY) : "";
+        String address = attributes.containsKey(ATTR_ADDRESS)
+                ? (String) attributes.get(ATTR_ADDRESS) : "";
+        String nationality = attributes.containsKey(ATTR_NATIONALITY)
+                ? (String) attributes.get(ATTR_NATIONALITY) : "";
 
         DigitalID newID = new DigitalID(
                 idNumber,
@@ -76,12 +82,15 @@ public class IdentityManager {
 
         repository.save(newID);
 
-        newID.addAuditEntry(new AuditEntry(
+        AuditEntry createEntry = new AuditEntry(
                 LocalDateTime.now(),
                 ACTION_CREATE,
                 callerType.name(),
                 "Identity created for: " + fullName
-        ));
+        );
+        newID.addAuditEntry(createEntry);
+        auditRepository.log(idNumber, createEntry);
+
         return idNumber;
     }
 
@@ -102,12 +111,15 @@ public class IdentityManager {
             }
         }
         applyMutableUpdates(digitalID, updates);
-
         repository.save(digitalID);
-        digitalID.addAuditEntry(new AuditEntry(
+
+        AuditEntry updateEntry = new AuditEntry(
                 LocalDateTime.now(), ACTION_UPDATE, callerType.name(),
                 "Attributes updated: " + updates.keySet()
-        ));
+        );
+
+        digitalID.addAuditEntry(updateEntry);
+        auditRepository.log(idNumber, updateEntry);
     }
 
     public void changeStatus(String idNumber, IDStatus newStatus, OrganisationType callerType) {
@@ -118,10 +130,14 @@ public class IdentityManager {
         digitalID.transitionStatus(newStatus, callerType.name());
 
         repository.save(digitalID);
-        digitalID.addAuditEntry(new AuditEntry(
+
+        AuditEntry statusEntry = new  AuditEntry(
                 LocalDateTime.now(), ACTION_STATUS_CHANGE, callerType.name(),
                 "Status changed to: " + newStatus
-        ));
+        );
+
+        digitalID.addAuditEntry(statusEntry);
+        auditRepository.log(idNumber, statusEntry);
     }
 
     private void applyMutableUpdates(DigitalID digitalID, Map<String, Object> updates) {
