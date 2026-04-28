@@ -24,7 +24,6 @@ class AuthorisationServiceTest {
         );
     }
 
-    /** A BANK must not be allowed to perform management operations. */
     @Test
     void authoriseManagementAction_throwsUnauthorisedActionException_forBank() {
         assertThrows(UnauthorisedActionException.class, () ->
@@ -32,7 +31,6 @@ class AuthorisationServiceTest {
         );
     }
 
-    /** A TAX_SERVICE must not be allowed to perform management operations. */
     @Test
     void authoriseManagementAction_throwsUnauthorisedActionException_forTaxService() {
         assertThrows(UnauthorisedActionException.class, () ->
@@ -40,7 +38,6 @@ class AuthorisationServiceTest {
         );
     }
 
-    /** A DRIVING_AUTHORITY must not be allowed to perform management operations. */
     @Test
     void authoriseManagementAction_throwsUnauthorisedActionException_forDrivingAuthority() {
         assertThrows(UnauthorisedActionException.class, () ->
@@ -48,7 +45,6 @@ class AuthorisationServiceTest {
         );
     }
 
-    /** An EMPLOYER must not be allowed to perform management operations. */
     @Test
     void authoriseManagementAction_throwsUnauthorisedActionException_forEmployer() {
         assertThrows(UnauthorisedActionException.class, () ->
