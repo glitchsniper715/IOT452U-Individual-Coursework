@@ -61,4 +61,61 @@ public class VerificationService {
         ));
         return result;
     }
+
+    /**
+     * checks that the identity is currently ACTIVE
+     * and was not suspended at any point during the specified date range.
+
+     * Used by TaxAuthorityPortal
+     */
+    public VerificationResult verifyWithHistory(String idNumber,
+                                                OrganisationType callerType,
+                                                LocalDateTime from,
+                                                LocalDateTime to) {
+
+        authService.authoriseConsumptionAction(callerType);
+
+        DigitalID digitalID;
+        try {
+            digitalID = repository.findById(idNumber);
+        } catch (IDNotFoundException e) {
+            return new VerificationResult("NOT_FOUND", "Identity does not exist");
+        }
+
+        if (digitalID.getStatus() != IDStatus.ACTIVE) {
+            return new VerificationResult(
+                    "INVALID",
+                    "Identity status: " + digitalID.getStatus()
+            );
+        }
+
+        List<AuditEntry> periodEntries =
+                auditRepository.findByIdNumberAndDateRange(idNumber, from, to);
+
+        boolean wasSuspendedDuringPeriod = periodEntries.stream()
+                .anyMatch(e -> e.action().equals(STATUS_CHANGE_ACTION)
+                        && e.details().contains(SUSPENDED_DETAIL));
+
+        VerificationResult result;
+        if (wasSuspendedDuringPeriod) {
+            result = new VerificationResult(
+                    "INVALID",
+                    "Identity was suspended during the reporting period"
+            );
+        } else {
+            result = new VerificationResult(
+                    "VALID",
+                    "Identity was active throughout the reporting period"
+            );
+        }
+
+        auditRepository.log(idNumber, new AuditEntry(
+                LocalDateTime.now(),
+                ACTION_VERIFICATION,
+                callerType.name(),
+                "Period verification result: " + result.status()
+        ));
+        return result;
+    }
+
 }
