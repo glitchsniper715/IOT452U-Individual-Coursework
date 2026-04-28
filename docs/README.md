@@ -4,8 +4,7 @@
 Describing the system and scenario
 
 ## Section 2: System Architecture
-Layered architecture
-Each package has a single responsibility
+Layered architecture: Each package has a single responsibility
 
 Packages:
 - Domain
@@ -29,15 +28,22 @@ Packages:
   - Console input/output
   - Handles user interactions and delegates operations to the service layer
   - Ensures separation of concern
+  
+### Class Diagram
+![Class Diagram](class_diagram.png)
 
 ## Section 3: Design Patterns Used 
-Repository Pattern
+### Repository Pattern
+IdentityManager depends on the IdentityRepository and AuditRepository interfaces, not on the concrete InMemory implementations. This separates storage from business logic and means the backing store can be swapped without changing any service code.
 
-I used the Repository Pattern so that IdentityManager depends on an interface, not a concrete class. This separates 
-storage from business logic and makes testing straightforward without a real database. The service layer only cares WHAT storage can do (defined here), not HOW it does it (defined in InMemoryIdentityRepository).
+### Dependency Injection
+IdentityManager receives all three of its dependencies through its constructor rather than creating them internally. This makes the class independently testable and is what allows the Repository Pattern to work in practice.
+
+### Domain Model
+DigitalID is not a passive data holder. It owns and enforces its own business rules: the status transition state machine and the internal audit log both live inside the domain object itself, keeping business logic out of the service layer.
 
 ## Section 4: How to Run 
 step-by-step commands
 
 ## Section 5: GitHub Repository Link
-https://github.com/sm325om/IOT452U-Individual-Coursework
+https://github.com/glitchsniper715/IOT452U-Individual-Coursework
