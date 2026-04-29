@@ -7,11 +7,6 @@ import java.time.LocalDateTime;
 /** Portal for tax authority organisations. */
 public class TaxAuthorityPortal extends OrganisationPortal {
 
-    /**
-     * Constructs a TaxAuthorityPortal.
-     *
-     * @param verificationService the shared verification service
-     */
     public TaxAuthorityPortal(VerificationService verificationService) {
         super(verificationService, OrganisationType.TAX_SERVICE);
     }

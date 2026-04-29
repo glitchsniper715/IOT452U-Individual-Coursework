@@ -157,4 +157,21 @@ public class IdentityManager {
             throw new ValidationException("Required field is missing or blank: " + fieldName);
         }
     }
+
+    public void setRestriction(String idNumber, boolean restricted, OrganisationType callerType) {
+        authService.authoriseManagementAction(callerType);
+        DigitalID digitalID = repository.findById(idNumber);
+
+        digitalID.setTemporaryRestriction(restricted);
+        repository.save(digitalID);
+
+        AuditEntry entry = new AuditEntry(
+                LocalDateTime.now(),
+                "RESTRICTION_UPDATED",
+                callerType.name(),
+                "Temporary restriction set to: " + restricted
+        );
+        digitalID.addAuditEntry(entry);
+        auditRepository.log(idNumber, entry);
+    }
 }

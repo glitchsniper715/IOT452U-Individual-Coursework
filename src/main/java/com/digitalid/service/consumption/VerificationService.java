@@ -118,4 +118,40 @@ public class VerificationService {
         return result;
     }
 
+    public VerificationResult verifyWithEligibility(String idNumber,
+                                                    OrganisationType callerType,
+                                                    List<String> requiredConditions) {
+        authService.authoriseConsumptionAction(callerType);
+
+        DigitalID digitalID;
+        try {
+            digitalID = repository.findById(idNumber);
+        } catch (IDNotFoundException e) {
+            return new VerificationResult("NOT_FOUND", "Identity does not exist");
+        }
+
+        if (digitalID.getStatus() != IDStatus.ACTIVE) {
+            return new VerificationResult(
+                    "INVALID",
+                    "Identity status: " + digitalID.getStatus()
+            );
+        }
+
+        if (requiredConditions.contains("NO_TEMPORARY_RESTRICTION")
+                && digitalID.isTemporaryRestriction()) {
+            return new VerificationResult(
+                    "INELIGIBLE",
+                    "Identity has a temporary restriction"
+            );
+        }
+
+        auditRepository.log(idNumber, new AuditEntry(
+                LocalDateTime.now(),
+                ACTION_VERIFICATION,
+                callerType.name(),
+                "Eligibility verification result: VALID"
+        ));
+        return new VerificationResult("VALID", "Identity is eligible");
+    }
+
 }
