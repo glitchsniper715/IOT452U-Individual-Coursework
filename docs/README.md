@@ -32,6 +32,17 @@ Packages:
 ### Class Diagram
 ![Class Diagram](class_diagram.png)
 
+## Organisation Portals
+
+The system provides organisation-specific portals that implement the consumption capability. Each portal exposes only the verification functionality appropriate to its role.
+
+| Portal               | Organisation Type | Verification Type                          |
+|----------------------|-------------------|--------------------------------------------|
+| BankPortal           | BANK              | Basic (ACTIVE/INVALID)                     |
+| EmployerPortal       | EMPLOYER          | Basic (ACTIVE/INVALID)                     |
+| TaxAuthorityPortal   | TAX_SERVICE       | Historical (period-based suspension check) |
+| DrivingLicencePortal | DRIVING_AUTHORITY | Eligibility (ACTIVE + no restrictions)     |
+
 ## Section 3: Design Patterns Used 
 ### Repository Pattern
 IdentityManager depends on the IdentityRepository and AuditRepository interfaces, not on the concrete InMemory implementations. This separates storage from business logic and means the backing store can be swapped without changing any service code.
