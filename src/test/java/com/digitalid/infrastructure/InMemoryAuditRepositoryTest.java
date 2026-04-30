@@ -25,7 +25,7 @@ class InMemoryAuditRepositoryTest {
 
         AuditEntry entry = new AuditEntry(
                 LocalDateTime.now(), "IDENTITY_CREATED", "CENTRAL_AUTHORITY",
-                "Identity created for: Jane Smith"
+                "Identity created for: Fake Person"
         );
 
         auditRepository.log(ID_NUMBER, entry);

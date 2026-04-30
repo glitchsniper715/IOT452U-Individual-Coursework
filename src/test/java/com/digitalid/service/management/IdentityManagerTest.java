@@ -72,10 +72,10 @@ class IdentityManagerTest {
 
     private Map<String, Object> validAttributes() {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("fullName",     "Jane Smith");
-        attrs.put("dateOfBirth",  LocalDate.of(1990, 5, 15));
+        attrs.put("fullName", "Fake Person");
+        attrs.put("dateOfBirth", LocalDate.of(1990, 5, 15));
         attrs.put("placeOfBirth", "London");
-        attrs.put("nationality",  "British");
+        attrs.put("nationality", "British");
         return attrs;
     }
 
@@ -83,10 +83,10 @@ class IdentityManagerTest {
     void updateAttributes_succeedsAndPersistsChange_whenIDIsActive() {
         String idNumber = createTestID();
 
-        manager.updateAttributes(idNumber, Map.of("fullName", "Jane Smith-Updated"), ORG_AUTH);
+        manager.updateAttributes(idNumber, Map.of("fullName", "Fake Person-Updated"), ORG_AUTH);
 
         String savedName = repository.findById(idNumber).getFullName();
-        assertEquals("Jane Smith-Updated", savedName);
+        assertEquals("Fake Person-Updated", savedName);
     }
 
     @Test
@@ -156,9 +156,9 @@ class IdentityManagerTest {
 
     private String createTestID() {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("fullName",     "Jane Smith");
-        attrs.put("dateOfBirth",  LocalDate.of(1990, 5, 15));
-        attrs.put("placeOfBirth", "London");
+        attrs.put("fullName", "Fake Person");
+        attrs.put("dateOfBirth", LocalDate.of(1990, 5, 15));
+        attrs.put("placeOfBirth","London");
         return manager.create(attrs, ORG_AUTH);
     }
 }
