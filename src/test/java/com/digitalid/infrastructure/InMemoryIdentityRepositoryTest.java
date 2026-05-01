@@ -24,7 +24,7 @@ class InMemoryIdentityRepositoryTest {
 
         testDigitalID = new DigitalID(
                 TEST_ID_NUMBER,
-                "Jane Smith",
+                "Fake Person",
                 LocalDate.of(1990, 5, 15),
                 "London",
                 "10 Test Street, London",
@@ -48,7 +48,7 @@ class InMemoryIdentityRepositoryTest {
 
         DigitalID updatedID = new DigitalID(
                 TEST_ID_NUMBER,
-                "Jane Smith-Updated",
+                "Fake Person-Updated",
                 LocalDate.of(1990, 5, 15),
                 "London",
                 "20 New Street, London",
@@ -58,7 +58,7 @@ class InMemoryIdentityRepositoryTest {
         repository.save(updatedID);
 
         DigitalID retrieved = repository.findById(TEST_ID_NUMBER);
-        assertEquals("Jane Smith-Updated", retrieved.getFullName());
+        assertEquals("Fake Person-Updated", retrieved.getFullName());
     }
 
     @Test

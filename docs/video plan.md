@@ -19,3 +19,22 @@ I also found that I have less experience in Java programming, therefore, this wa
 
 ## State machine diagram
 ![State machine diagram](state-machine-diagram.png)
+
+## Summary 
+- architecture used
+- what layers exist
+- what each layer does
+- separation of management and consumption
+- which design patterns are used
+
+The system follows a Layered Architecture consisting of presentation, service, domain, and infrastructure layers.
+
+The service layer is divided into management and consumption components, directly reflecting the assessment requirement to separate write and read operations.
+
+The domain layer contains core entities such as DigitalID, while the infrastructure layer implements data persistence using the Repository Pattern, separating business logic from storage.
+
+The consumption layer applies the Facade Pattern through organisation-specific portals (e.g. BankPortal, TaxAuthorityPortal), providing simplified interfaces tailored to each organisation type.
+
+Authorisation is implemented as a separate layer, enforcing access control before any service operation and demonstrating the Single Responsibility Principle.
+
+A dedicated exception package provides domain-specific error handling, ensuring invalid operations are handled consistently and meaningfully across the system.

@@ -54,7 +54,6 @@ public class DigitalID {
         this.address = address;
         this.nationality = nationality;
         this.status = IDStatus.ACTIVE;
-        this.temporaryRestriction = false;
     }
 
     public void setFullName(String fullName) {
@@ -122,7 +121,7 @@ public class DigitalID {
 
         if (!isValidTransition(this.status, newStatus)) {
             throw new InvalidTransitionException(
-                    "Cannot transition from " + this.status + "to " + newStatus
+                    "Cannot transition from " + this.status + " to " + newStatus
             );
         }
         IDStatus previousStatus = this.status;
@@ -132,16 +131,15 @@ public class DigitalID {
                 LocalDateTime.now(),
                 "STATUS_CHANGE",
                 performedBy,
-                "Status changed from " + previousStatus + "to " + newStatus
+                "Status changed from " + previousStatus + " to " + newStatus
         ));
     }
 
     private boolean isValidTransition(IDStatus from, IDStatus to) {
-        switch (from) {
-            case ACTIVE: return to == IDStatus.SUSPENDED || to == IDStatus.REVOKED;
-            case SUSPENDED: return to == IDStatus.ACTIVE || to == IDStatus.REVOKED;
-            case REVOKED: return false;
-            default: return false;
-        }
+        return switch (from) {
+            case ACTIVE    -> to == IDStatus.SUSPENDED || to == IDStatus.REVOKED;
+            case SUSPENDED -> to == IDStatus.ACTIVE    || to == IDStatus.REVOKED;
+            case REVOKED   -> false;
+        };
     }
 }

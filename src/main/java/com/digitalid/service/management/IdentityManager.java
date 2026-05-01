@@ -22,6 +22,7 @@ public class IdentityManager {
     private static final String ACTION_CREATE = "IDENTITY_CREATED";
     private static final String ACTION_UPDATE = "IDENTITY_UPDATED";
     private static final String ACTION_STATUS_CHANGE = "STATUS_CHANGE";
+    private static final String ACTION_RESTRICTION_UPDATE = "RESTRICTION_UPDATED";
 
     private static final String ATTR_FULL_NAME = "fullName";
     private static final String ATTR_DATE_OF_BIRTH = "dateOfBirth";
@@ -66,10 +67,9 @@ public class IdentityManager {
         LocalDate dateOfBirth = (LocalDate) attributes.get(ATTR_DATE_OF_BIRTH);
         String placeOfBirth = (String) attributes.get(ATTR_PLACE_OF_BIRTH);
 
-        String address = attributes.containsKey(ATTR_ADDRESS)
-                ? (String) attributes.get(ATTR_ADDRESS) : "";
-        String nationality = attributes.containsKey(ATTR_NATIONALITY)
-                ? (String) attributes.get(ATTR_NATIONALITY) : "";
+        String address = (String) attributes.getOrDefault(ATTR_ADDRESS, "");
+        String nationality = (String) attributes.getOrDefault(ATTR_NATIONALITY, "");
+
 
         DigitalID newID = new DigitalID(
                 idNumber,
@@ -104,12 +104,12 @@ public class IdentityManager {
                     "Cannot update a REVOKED identity: " + idNumber);
         }
 
-        for (String key : updates.keySet()) {
-            if (IMMUTABLE_FIELDS.contains(key)) {
-                throw new ImmutableFieldException(
-                        "Field cannot be changed after creation: " + key);
-            }
-        }
+        updates.keySet().stream()
+                .filter(IMMUTABLE_FIELDS::contains)
+                .findFirst()
+                .ifPresent(field -> { throw new ImmutableFieldException(
+                        "Field cannot be changed after creation: " + field); });
+
         applyMutableUpdates(digitalID, updates);
         repository.save(digitalID);
 
@@ -156,5 +156,22 @@ public class IdentityManager {
         if (value == null || value.toString().isBlank()) {
             throw new ValidationException("Required field is missing or blank: " + fieldName);
         }
+    }
+
+    public void setRestriction(String idNumber, boolean restricted, OrganisationType callerType) {
+        authService.authoriseManagementAction(callerType);
+        DigitalID digitalID = repository.findById(idNumber);
+
+        digitalID.setTemporaryRestriction(restricted);
+        repository.save(digitalID);
+
+        AuditEntry entry = new AuditEntry(
+                LocalDateTime.now(),
+                ACTION_RESTRICTION_UPDATE,
+                callerType.name(),
+                "Temporary restriction set to: " + restricted
+        );
+        digitalID.addAuditEntry(entry);
+        auditRepository.log(idNumber, entry);
     }
 }
