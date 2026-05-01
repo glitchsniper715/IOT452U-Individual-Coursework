@@ -14,19 +14,19 @@ import java.util.List;
 
 public class VerificationService {
     private static final String ACTION_VERIFICATION = "VERIFICATION_REQUESTED";
-
     private static final String STATUS_CHANGE_ACTION = "STATUS_CHANGE";
-    private static final String SUSPENDED_DETAIL     = "SUSPENDED";
+    private static final String SUSPENDED_DETAIL = "SUSPENDED";
+    private static final String CONDITION_NO_RESTRICTION = "NO_TEMPORARY_RESTRICTION";
 
-    private final IdentityRepository   repository;
+    private final IdentityRepository repository;
     private final AuthorisationService authService;
-    private final AuditRepository      auditRepository;
+    private final AuditRepository auditRepository;
 
-    public VerificationService(IdentityRepository   repository,
+    public VerificationService(IdentityRepository repository,
                                AuthorisationService authService,
-                               AuditRepository      auditRepository) {
-        this.repository      = repository;
-        this.authService     = authService;
+                               AuditRepository auditRepository) {
+        this.repository = repository;
+        this.authService = authService;
         this.auditRepository = auditRepository;
     }
     /**
@@ -36,22 +36,15 @@ public class VerificationService {
     public VerificationResult verifyBasic(String idNumber, OrganisationType callerType) {
 
         authService.authoriseConsumptionAction(callerType);
-        DigitalID digitalID;
-        try {
-            digitalID = repository.findById(idNumber);
-        } catch (IDNotFoundException e) {
+
+        DigitalID digitalID = fetchById(idNumber);
+        if (digitalID == null) {
             return new VerificationResult("NOT_FOUND", "Identity does not exist");
         }
 
-        VerificationResult result;
-        if (digitalID.getStatus() == IDStatus.ACTIVE) {
-            result = new VerificationResult("VALID", "Identity is active");
-        } else {
-            result = new VerificationResult(
-                    "INVALID",
-                    "Identity status: " + digitalID.getStatus()
-            );
-        }
+        VerificationResult result = digitalID.getStatus() == IDStatus.ACTIVE
+                ? new VerificationResult("VALID", "Identity is active")
+                : new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
 
         auditRepository.log(idNumber, new AuditEntry(
                 LocalDateTime.now(),
@@ -75,39 +68,24 @@ public class VerificationService {
 
         authService.authoriseConsumptionAction(callerType);
 
-        DigitalID digitalID;
-        try {
-            digitalID = repository.findById(idNumber);
-        } catch (IDNotFoundException e) {
+        DigitalID digitalID = fetchById(idNumber);
+        if (digitalID == null) {
             return new VerificationResult("NOT_FOUND", "Identity does not exist");
         }
 
         if (digitalID.getStatus() != IDStatus.ACTIVE) {
-            return new VerificationResult(
-                    "INVALID",
-                    "Identity status: " + digitalID.getStatus()
-            );
+            return new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
         }
 
-        List<AuditEntry> periodEntries =
-                auditRepository.findByIdNumberAndDateRange(idNumber, from, to);
-
-        boolean wasSuspendedDuringPeriod = periodEntries.stream()
+        boolean wasSuspendedDuringPeriod = auditRepository
+                .findByIdNumberAndDateRange(idNumber, from, to)
+                .stream()
                 .anyMatch(e -> e.action().equals(STATUS_CHANGE_ACTION)
                         && e.details().contains(SUSPENDED_DETAIL));
 
-        VerificationResult result;
-        if (wasSuspendedDuringPeriod) {
-            result = new VerificationResult(
-                    "INVALID",
-                    "Identity was suspended during the reporting period"
-            );
-        } else {
-            result = new VerificationResult(
-                    "VALID",
-                    "Identity was active throughout the reporting period"
-            );
-        }
+        VerificationResult result = wasSuspendedDuringPeriod
+                ? new VerificationResult("INVALID", "Identity was suspended during the reporting period")
+                : new VerificationResult("VALID", "Identity was active throughout the reporting period");
 
         auditRepository.log(idNumber, new AuditEntry(
                 LocalDateTime.now(),
@@ -123,26 +101,18 @@ public class VerificationService {
                                                     List<String> requiredConditions) {
         authService.authoriseConsumptionAction(callerType);
 
-        DigitalID digitalID;
-        try {
-            digitalID = repository.findById(idNumber);
-        } catch (IDNotFoundException e) {
+        DigitalID digitalID = fetchById(idNumber);
+        if (digitalID == null) {
             return new VerificationResult("NOT_FOUND", "Identity does not exist");
         }
 
         if (digitalID.getStatus() != IDStatus.ACTIVE) {
-            return new VerificationResult(
-                    "INVALID",
-                    "Identity status: " + digitalID.getStatus()
-            );
+            return new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
         }
 
-        if (requiredConditions.contains("NO_TEMPORARY_RESTRICTION")
+        if (requiredConditions.contains(CONDITION_NO_RESTRICTION)
                 && digitalID.isTemporaryRestriction()) {
-            return new VerificationResult(
-                    "INELIGIBLE",
-                    "Identity has a temporary restriction"
-            );
+            return new VerificationResult("INELIGIBLE", "Identity has a temporary restriction");
         }
 
         auditRepository.log(idNumber, new AuditEntry(
@@ -152,6 +122,14 @@ public class VerificationService {
                 "Eligibility verification result: VALID"
         ));
         return new VerificationResult("VALID", "Identity is eligible");
+    }
+
+    private DigitalID fetchById(String idNumber) {
+        try {
+            return repository.findById(idNumber);
+        } catch (IDNotFoundException e) {
+            return null;
+        }
     }
 
 }
