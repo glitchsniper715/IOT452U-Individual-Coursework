@@ -3,6 +3,7 @@ package com.digitalid.service.consumption;
 import com.digitalid.authorisation.AuthorisationService;
 import com.digitalid.authorisation.OrganisationType;
 import com.digitalid.domain.IDStatus;
+import com.digitalid.exception.*;
 import com.digitalid.infrastructure.InMemoryAuditRepository;
 import com.digitalid.infrastructure.InMemoryIdentityRepository;
 import com.digitalid.service.management.IdentityManager;
@@ -50,6 +51,27 @@ class BankPortalTest {
         VerificationResult result = bankPortal.verifyIdentity(id);
 
         assertEquals("INVALID", result.status());
+    }
+
+    @Test
+    void verify_throwsIllegalArgumentException_whenIdIsEmpty() {
+        assertThrows(IllegalArgumentException.class,
+                () -> bankPortal.verifyIdentity(""),
+                "Verifying with empty ID must throw IllegalArgumentException");
+    }
+
+    @Test
+    void verify_throwsIllegalArgumentException_whenIdIsNull() {
+        assertThrows(IllegalArgumentException.class,
+                () -> bankPortal.verifyIdentity(null),
+                "Verifying with null ID must throw IllegalArgumentException");
+    }
+
+    @Test
+    void verify_throwsIDNotFoundException_whenIdDoesNotExist() {
+        assertThrows(IDNotFoundException.class,
+                () -> bankPortal.verifyIdentity("non-existent-id"),
+                "Verifying a non-existent ID must throw IDNotFoundException");
     }
 
     private String createTestID() {
