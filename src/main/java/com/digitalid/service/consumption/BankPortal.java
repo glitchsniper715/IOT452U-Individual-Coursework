@@ -17,6 +17,9 @@ public class BankPortal extends OrganisationPortal {
      * Returns NOT_FOUND if no identity with the given ID number exists.
      */
     public VerificationResult verifyIdentity(String idNumber) {
+        if (idNumber == null || idNumber.isBlank()) {
+            return new VerificationResult("INVALID", "ID must not be null or empty");
+        }
         return verificationService.verifyBasic(idNumber, organisationType);
     }
 }

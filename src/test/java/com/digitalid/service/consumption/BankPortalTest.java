@@ -54,24 +54,28 @@ class BankPortalTest {
     }
 
     @Test
-    void verify_throwsIllegalArgumentException_whenIdIsEmpty() {
-        assertThrows(IllegalArgumentException.class,
-                () -> bankPortal.verifyIdentity(""),
-                "Verifying with empty ID must throw IllegalArgumentException");
+    void verifyIdentity_returnsINVALID_whenIdIsEmpty() {
+        VerificationResult result = bankPortal.verifyIdentity("");
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("id"),
+                "Reason should mention invalid ID");
     }
 
     @Test
-    void verify_throwsIllegalArgumentException_whenIdIsNull() {
-        assertThrows(IllegalArgumentException.class,
-                () -> bankPortal.verifyIdentity(null),
-                "Verifying with null ID must throw IllegalArgumentException");
+    void verifyIdentity_returnsINVALID_whenIdIsNull() {
+        VerificationResult result = bankPortal.verifyIdentity(null);
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("id"),
+                "Reason should mention invalid ID");
     }
 
     @Test
-    void verify_throwsIDNotFoundException_whenIdDoesNotExist() {
-        assertThrows(IDNotFoundException.class,
-                () -> bankPortal.verifyIdentity("non-existent-id"),
-                "Verifying a non-existent ID must throw IDNotFoundException");
+    void verifyIdentity_returnsNOT_FOUND_whenIdDoesNotExist() {
+        VerificationResult result = bankPortal.verifyIdentity("non-existent-id");
+
+        assertEquals("NOT_FOUND", result.status());
     }
 
     private String createTestID() {
