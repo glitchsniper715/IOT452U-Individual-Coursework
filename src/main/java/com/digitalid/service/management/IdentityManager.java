@@ -127,6 +127,10 @@ public class IdentityManager {
         authService.authoriseManagementAction(callerType);
         DigitalID digitalID = repository.findById(idNumber);
 
+        if (digitalID.getStatus() == newStatus) {
+            throw new ValidationException("Cannot change to the same status");
+        }
+
         digitalID.transitionStatus(newStatus, callerType.name());
 
         repository.save(digitalID);
