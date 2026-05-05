@@ -18,6 +18,11 @@ public class VerificationService {
     private static final String SUSPENDED_DETAIL = "SUSPENDED";
     private static final String CONDITION_NO_RESTRICTION = "NO_TEMPORARY_RESTRICTION";
 
+    private static final String STATUS_VALID = "VALID";
+    private static final String STATUS_INVALID = "INVALID";
+    private static final String STATUS_INELIGIBLE = "INELIGIBLE";
+    private static final String STATUS_NOT_FOUND = "NOT_FOUND";
+
     private final IdentityRepository repository;
     private final AuthorisationService authService;
     private final AuditRepository auditRepository;
@@ -39,19 +44,12 @@ public class VerificationService {
 
         DigitalID digitalID = fetchById(idNumber);
         if (digitalID == null) {
-            return new VerificationResult("NOT_FOUND", "Identity does not exist");
+            return new VerificationResult(STATUS_NOT_FOUND, "Identity does not exist");
         }
 
-        VerificationResult result = digitalID.getStatus() == IDStatus.ACTIVE
-                ? new VerificationResult("VALID", "Identity is active")
-                : new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
+        VerificationResult result = buildBasicResult(digitalID);
+        logVerificationEvent(idNumber, callerType, "Basic verification result: " + result.status());
 
-        auditRepository.log(idNumber, new AuditEntry(
-                LocalDateTime.now(),
-                ACTION_VERIFICATION,
-                callerType.name(),
-                "Basic verification result: " + result.status()
-        ));
         return result;
     }
 
@@ -70,29 +68,17 @@ public class VerificationService {
 
         DigitalID digitalID = fetchById(idNumber);
         if (digitalID == null) {
-            return new VerificationResult("NOT_FOUND", "Identity does not exist");
+            return new VerificationResult(STATUS_NOT_FOUND, "Identity does not exist");
         }
 
         if (digitalID.getStatus() != IDStatus.ACTIVE) {
-            return new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
+            return new VerificationResult(STATUS_INVALID,
+                    "Identity status: " + digitalID.getStatus());
         }
 
-        boolean wasSuspendedDuringPeriod = auditRepository
-                .findByIdNumberAndDateRange(idNumber, from, to)
-                .stream()
-                .anyMatch(e -> e.action().equals(STATUS_CHANGE_ACTION)
-                        && e.details().contains(SUSPENDED_DETAIL));
+        VerificationResult result = buildHistoryResult(idNumber, from, to);
+        logVerificationEvent(idNumber, callerType, "Period verification result: " + result.status());
 
-        VerificationResult result = wasSuspendedDuringPeriod
-                ? new VerificationResult("INVALID", "Identity was suspended during the reporting period")
-                : new VerificationResult("VALID", "Identity was active throughout the reporting period");
-
-        auditRepository.log(idNumber, new AuditEntry(
-                LocalDateTime.now(),
-                ACTION_VERIFICATION,
-                callerType.name(),
-                "Period verification result: " + result.status()
-        ));
         return result;
     }
 
@@ -103,25 +89,18 @@ public class VerificationService {
 
         DigitalID digitalID = fetchById(idNumber);
         if (digitalID == null) {
-            return new VerificationResult("NOT_FOUND", "Identity does not exist");
+            return new VerificationResult(STATUS_NOT_FOUND, "Identity does not exist");
         }
 
         if (digitalID.getStatus() != IDStatus.ACTIVE) {
-            return new VerificationResult("INVALID", "Identity status: " + digitalID.getStatus());
+            return new VerificationResult(STATUS_INVALID,
+                    "Identity status: " + digitalID.getStatus());
         }
 
-        if (requiredConditions.contains(CONDITION_NO_RESTRICTION)
-                && digitalID.isTemporaryRestriction()) {
-            return new VerificationResult("INELIGIBLE", "Identity has a temporary restriction");
-        }
+        VerificationResult result = evaluateEligibilityConditions(digitalID, requiredConditions);
+        logVerificationEvent(idNumber, callerType, "Eligibility verification result: " + result.status());
 
-        auditRepository.log(idNumber, new AuditEntry(
-                LocalDateTime.now(),
-                ACTION_VERIFICATION,
-                callerType.name(),
-                "Eligibility verification result: VALID"
-        ));
-        return new VerificationResult("VALID", "Identity is eligible");
+        return result;
     }
 
     private DigitalID fetchById(String idNumber) {
@@ -132,4 +111,48 @@ public class VerificationService {
         }
     }
 
+    private VerificationResult buildBasicResult(DigitalID digitalID) {
+        if (digitalID.getStatus() == IDStatus.ACTIVE) {
+            return new VerificationResult(STATUS_VALID, "Identity is active");
+        }
+        return new VerificationResult(STATUS_INVALID,
+                "Identity status: " + digitalID.getStatus());
+    }
+
+    private VerificationResult buildHistoryResult(String idNumber,
+                                                  LocalDateTime from,
+                                                  LocalDateTime to) {
+        boolean wasSuspendedDuringPeriod = auditRepository
+                .findByIdNumberAndDateRange(idNumber, from, to)
+                .stream()
+                .anyMatch(e -> e.action().equals(STATUS_CHANGE_ACTION)
+                        && e.details().contains(SUSPENDED_DETAIL));
+
+        if (wasSuspendedDuringPeriod) {
+            return new VerificationResult(STATUS_INVALID,
+                    "Identity was suspended during the reporting period");
+        }
+        return new VerificationResult(STATUS_VALID,
+                "Identity was active throughout the reporting period");
+    }
+
+    private VerificationResult evaluateEligibilityConditions(DigitalID digitalID,
+                                                             List<String> requiredConditions) {
+        if (requiredConditions.contains(CONDITION_NO_RESTRICTION)
+                && digitalID.isTemporaryRestriction()) {
+            return new VerificationResult(STATUS_INELIGIBLE,
+                    "Identity has a temporary restriction");
+        }
+        return new VerificationResult(STATUS_VALID, "Identity is eligible");
+    }
+
+    private void logVerificationEvent(String idNumber,
+                                      OrganisationType callerType,
+                                      String detail) {
+        auditRepository.log(idNumber, new AuditEntry(
+                LocalDateTime.now(),
+                ACTION_VERIFICATION,
+                callerType.name(),
+                detail));
+    }
 }

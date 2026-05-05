@@ -17,6 +17,7 @@ import java.util.List;
  */
 public class DigitalID {
 
+    private static final String ACTION_STATUS_CHANGE = "STATUS_CHANGE";
     private final String idNumber;
     private final LocalDate dateOfBirth;
     private final String placeOfBirth;
@@ -129,7 +130,7 @@ public class DigitalID {
 
         auditLog.add(new AuditEntry(
                 LocalDateTime.now(),
-                "STATUS_CHANGE",
+                ACTION_STATUS_CHANGE,
                 performedBy,
                 "Status changed from " + previousStatus + " to " + newStatus
         ));
