@@ -3,6 +3,8 @@ package com.digitalid.infrastructure;
 import com.digitalid.domain.DigitalID;
 import com.digitalid.exception.IDNotFoundException;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +34,9 @@ public class InMemoryIdentityRepository implements IdentityRepository {
     @Override
     public DigitalID findById(String idNumber) throws IDNotFoundException {
         DigitalID found = store.get(idNumber);
-
         if (found == null) {
             throw new IDNotFoundException("Digital ID not found: " + idNumber);
         }
-
         return found;
     }
 
@@ -47,5 +47,10 @@ public class InMemoryIdentityRepository implements IdentityRepository {
     @Override
     public boolean exists(String idNumber) {
         return store.containsKey(idNumber);
+    }
+
+    @Override
+    public Collection<DigitalID> findAll() {
+        return Collections.unmodifiableCollection(store.values());
     }
 }

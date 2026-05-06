@@ -3,6 +3,8 @@ package com.digitalid.infrastructure;
 import com.digitalid.domain.DigitalID;
 import com.digitalid.exception.IDNotFoundException;
 
+import java.util.Collection;
+
 /**
  * Defines the contract for storing and retrieving Digital ID objects.
  * IdentityManager will depend on this interface rather than on InMemoryIdentityRepository directly.
@@ -20,4 +22,7 @@ public interface IdentityRepository {
 
     /** Checks whether a Digital ID with the given ID number exists in the store. */
     boolean exists(String idNumber);
+
+    /** Returns all Digital IDs currently in the store. */
+    Collection<DigitalID> findAll();
 }
