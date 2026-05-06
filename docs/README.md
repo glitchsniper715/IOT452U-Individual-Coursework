@@ -98,11 +98,18 @@ mvn javadoc:javadoc
 ```
 Generated documentation will be at `target/reports/apidocs/index.html`.
 
-## Section 5: GitHub Repository
+## Section 5: Continuous Integration
+
+The project uses GitHub Actions for continuous integration. Maven tests are automatically executed on every push and pull request.
+
+Workflow runs and build history can be viewed here:
+https://github.com/glitchsniper715/IOT452U-Individual-Coursework/actions/workflows/maven-ci.yml
+
+## Section 6: GitHub Repository
 
 https://github.com/glitchsniper715/IOT452U-Individual-Coursework
 
-## Section 6: References
+## Section 7: References
 
 Fowler, M. (2002). *Patterns of enterprise application architecture*. Addison-Wesley.
 
