@@ -54,7 +54,47 @@ IdentityManager receives all three of its dependencies through its constructor r
 DigitalID is not a passive data holder. It owns and enforces its own business rules: the status transition state machine and the internal audit log both live inside the domain object itself, keeping business logic out of the service layer.
 
 ## Section 4: How to Run 
-step-by-step commands
+### Requirements
+- Java 17 or later
+- Maven 3.8 or later
+
+Check your versions before starting:
+```
+java -version
+mvn -version
+```
+
+### Step 1 — Clone the repository
+```
+git clone https://github.com/glitchsniper715/IOT452U-Individual-Coursework.git
+cd IOT452U-Individual-Coursework
+```
+
+### Step 2 — Run all tests
+```
+mvn test
+```
+All tests should pass, and you will see a `BUILD SUCCESS` message. JaCoCo will also generate a coverage report at 
+`target/site/jacoco/index.html` — open that file in a browser to see line-by-line coverage.
+
+### Step 3 — Run the demonstration
+```
+mvn exec:java -Dexec.mainClass=com.digitalid.presentation.Main
+```
+This runs `Main.java`, which executes nine scenarios covering every system capability. Each line of output is labelled `[ACCEPTED]` or `[REJECTED]` so you can see the system behaving correctly in both the happy path and the error cases.
+
+### Expected output (first few lines)
+```
+╔══════════════════════════════════════════════════════════════╗
+║  SCENARIO 1: Creating Digital IDs                            ║
+║  Only CENTRAL_AUTHORITY may create identities                ║
+╚══════════════════════════════════════════════════════════════╝
+[ACCEPTED] Central Authority creates Jane Smith → ID: DIG-XXXXX
+[ACCEPTED] Central Authority creates John Doe  → ID: DIG-XXXXX
+[ACCEPTED] Central Authority creates Ali Hassan → ID: DIG-XXXXX
+```
+The UUID suffix in each ID will differ on every run — that is expected behaviour.
+
 
 ## Section 5: GitHub Repository Link
 https://github.com/glitchsniper715/IOT452U-Individual-Coursework
