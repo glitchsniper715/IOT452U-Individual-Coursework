@@ -21,7 +21,7 @@ public class DrivingLicencePortal extends OrganisationPortal {
      * Returns VALID if the identity exists, is ACTIVE, and has no temporary restriction.
      * Returns INELIGIBLE if the identity is ACTIVE but has a temporary restriction.
      * Returns INVALID if the identity is not ACTIVE.
-     * Returns NOT_FOUND if no identity with the given ID number exists.</p>
+     * Returns NOT_FOUND if no identity with the given ID number exists.
      */
     public VerificationResult verifyForLicence(String idNumber) {
         return verificationService.verifyWithEligibility(
