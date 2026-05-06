@@ -3,6 +3,7 @@ package com.digitalid.service.consumption;
 import com.digitalid.authorisation.AuthorisationService;
 import com.digitalid.authorisation.OrganisationType;
 import com.digitalid.domain.IDStatus;
+import com.digitalid.exception.*;
 import com.digitalid.infrastructure.InMemoryAuditRepository;
 import com.digitalid.infrastructure.InMemoryIdentityRepository;
 import com.digitalid.service.management.IdentityManager;
@@ -50,6 +51,31 @@ class BankPortalTest {
         VerificationResult result = bankPortal.verifyIdentity(id);
 
         assertEquals("INVALID", result.status());
+    }
+
+    @Test
+    void verifyIdentity_returnsINVALID_whenIdIsEmpty() {
+        VerificationResult result = bankPortal.verifyIdentity("");
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("id"),
+                "Reason should mention invalid ID");
+    }
+
+    @Test
+    void verifyIdentity_returnsINVALID_whenIdIsNull() {
+        VerificationResult result = bankPortal.verifyIdentity(null);
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("id"),
+                "Reason should mention invalid ID");
+    }
+
+    @Test
+    void verifyIdentity_returnsNOT_FOUND_whenIdDoesNotExist() {
+        VerificationResult result = bankPortal.verifyIdentity("non-existent-id");
+
+        assertEquals("NOT_FOUND", result.status());
     }
 
     private String createTestID() {

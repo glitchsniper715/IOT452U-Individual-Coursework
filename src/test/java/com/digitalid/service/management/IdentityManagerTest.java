@@ -4,9 +4,7 @@ import com.digitalid.authorisation.AuthorisationService;
 import com.digitalid.authorisation.OrganisationType;
 import com.digitalid.domain.AuditEntry;
 import com.digitalid.domain.IDStatus;
-import com.digitalid.exception.UnauthorisedActionException;
-import com.digitalid.exception.ImmutableFieldException;
-import com.digitalid.exception.ValidationException;
+import com.digitalid.exception.*;
 import com.digitalid.infrastructure.InMemoryAuditRepository;
 import com.digitalid.infrastructure.InMemoryIdentityRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +26,21 @@ class IdentityManagerTest {
 
     @BeforeEach
     void setUp() {
-        repository      = new InMemoryIdentityRepository();
+        repository = new InMemoryIdentityRepository();
         auditRepository = new InMemoryAuditRepository();
-        manager         = new IdentityManager(repository, new AuthorisationService(), auditRepository);
+        manager = new IdentityManager(repository, new AuthorisationService(), auditRepository);
 
+    }
+
+    @Test
+    void create_generatesDifferentIds_whenAttributesAreIdentical() {
+        Map<String, Object> attrs = validAttributes();
+
+        String id1 = manager.create(attrs, ORG_AUTH);
+        String id2 = manager.create(attrs, ORG_AUTH);
+
+        assertNotEquals(id1, id2,
+                "Each created DigitalID must have a unique idNumber even with identical attributes");
     }
 
     @Test
@@ -101,6 +110,14 @@ class IdentityManagerTest {
     }
 
     @Test
+    void updateAttributes_throwsIDNotFoundException_whenIdDoesNotExist() {
+        assertThrows(IDNotFoundException.class,
+                () -> manager.updateAttributes("non-existent-id",
+                        Map.of("fullName", "New Name"), ORG_AUTH),
+                "Updating a non-existent ID must throw an exception");
+    }
+
+    @Test
     void updateAttributes_throwsImmutableFieldException_whenImmutableFieldTargeted() {
         String idNumber = createTestID();
 
@@ -118,6 +135,36 @@ class IdentityManagerTest {
 
         IDStatus newStatus = repository.findById(idNumber).getStatus();
         assertEquals(IDStatus.SUSPENDED, newStatus);
+    }
+
+    @Test
+    void changeStatus_throwsValidationException_whenSettingSameStatus() {
+        String idNumber = createTestID();
+
+        assertThrows(ValidationException.class,
+                () -> manager.changeStatus(idNumber, IDStatus.ACTIVE, ORG_AUTH),
+                "Changing to the same status should not be allowed");
+    }
+
+    @Test
+    void changeStatus_throwsIDNotFoundException_whenIdDoesNotExist() {
+        assertThrows(IDNotFoundException.class,
+                () -> manager.changeStatus("non-existent-id", IDStatus.SUSPENDED, ORG_AUTH),
+                "Changing status of a non-existent ID must throw an exception");
+    }
+
+    @Test
+    void changeStatus_writesEntryToAuditRepository_afterSuccessfulTransition() {
+        String idNumber = createTestID();
+
+        manager.changeStatus(idNumber, IDStatus.SUSPENDED, ORG_AUTH);
+
+        List<AuditEntry> entries = auditRepository.findByIdNumber(idNumber);
+        boolean hasStatusEntry = entries.stream()
+                .anyMatch(e -> e.action().equals("STATUS_CHANGE"));
+
+        assertTrue(hasStatusEntry,
+                "AuditRepository must contain a STATUS_CHANGE entry after changeStatus()");
     }
 
     @Test
@@ -141,17 +188,15 @@ class IdentityManagerTest {
     }
 
     @Test
-    void changeStatus_writesEntryToAuditRepository_afterSuccessfulTransition() {
-        String idNumber = createTestID();
+    void create_throwsValidationException_whenDateOfBirthIsMissing() {
+        Map<String, Object> attrs = validAttributes();
+        attrs.remove("dateOfBirth");
 
-        manager.changeStatus(idNumber, IDStatus.SUSPENDED, ORG_AUTH);
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> manager.create(attrs, ORG_AUTH));
 
-        List<AuditEntry> entries = auditRepository.findByIdNumber(idNumber);
-        boolean hasStatusEntry = entries.stream()
-                .anyMatch(e -> e.action().equals("STATUS_CHANGE"));
-
-        assertTrue(hasStatusEntry,
-                "AuditRepository must contain a STATUS_CHANGE entry after changeStatus()");
+        assertTrue(ex.getMessage().contains("dateOfBirth"),
+                "Exception message must name the missing field");
     }
 
     private String createTestID() {

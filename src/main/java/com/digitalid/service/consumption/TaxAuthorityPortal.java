@@ -22,6 +22,10 @@ public class TaxAuthorityPortal extends OrganisationPortal {
     public VerificationResult verifyForPeriod(String idNumber,
                                               LocalDateTime from,
                                               LocalDateTime to) {
+        if (from == null || to == null) {
+            return new VerificationResult("INVALID", "Date range must not be null");
+        }
+
         return verificationService.verifyWithHistory(idNumber, organisationType, from, to);
     }
 }

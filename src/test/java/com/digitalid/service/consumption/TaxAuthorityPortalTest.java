@@ -71,6 +71,32 @@ class TaxAuthorityPortalTest {
         assertEquals("NOT_FOUND", result.status());
     }
 
+    @Test
+    void verifyForPeriod_returnsINVALID_whenFromDateIsNull() {
+        String id = createTestID();
+
+        LocalDateTime to = LocalDateTime.now();
+
+        VerificationResult result = taxPortal.verifyForPeriod(id, null, to);
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("date"),
+                "Reason should mention invalid or missing date");
+    }
+
+    @Test
+    void verifyForPeriod_returnsINVALID_whenToDateIsNull() {
+        String id = createTestID();
+
+        LocalDateTime from = LocalDateTime.now().minusHours(1);
+
+        VerificationResult result = taxPortal.verifyForPeriod(id, from, null);
+
+        assertEquals("INVALID", result.status());
+        assertTrue(result.reason().toLowerCase().contains("date"),
+                "Reason should mention invalid or missing date");
+    }
+
     private String createTestID() {
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("fullName", "Fake Name");

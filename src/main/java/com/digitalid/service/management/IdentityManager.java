@@ -30,6 +30,7 @@ public class IdentityManager {
 
     private static final String ATTR_ADDRESS = "address";
     private static final String ATTR_NATIONALITY = "nationality";
+    private static final String ATTR_TEMP_RESTRICTION = "temporaryRestriction";
 
     private static final Set<String> IMMUTABLE_FIELDS =
             Set.of("idNumber", "dateOfBirth", "placeOfBirth");
@@ -94,21 +95,15 @@ public class IdentityManager {
         return idNumber;
     }
 
-    public void updateAttributes(String idNumber, Map<String, Object> updates, OrganisationType callerType) {
+    public void updateAttributes(String idNumber,
+                                 Map<String, Object> updates,
+                                 OrganisationType callerType) {
 
         authService.authoriseManagementAction(callerType);
         DigitalID digitalID = repository.findById(idNumber);
 
-        if (digitalID.getStatus() == IDStatus.REVOKED) {
-            throw new ValidationException(
-                    "Cannot update a REVOKED identity: " + idNumber);
-        }
-
-        updates.keySet().stream()
-                .filter(IMMUTABLE_FIELDS::contains)
-                .findFirst()
-                .ifPresent(field -> { throw new ImmutableFieldException(
-                        "Field cannot be changed after creation: " + field); });
+        rejectIfRevoked(digitalID, idNumber);
+        rejectIfImmutableFieldTargeted(updates);
 
         applyMutableUpdates(digitalID, updates);
         repository.save(digitalID);
@@ -126,6 +121,10 @@ public class IdentityManager {
 
         authService.authoriseManagementAction(callerType);
         DigitalID digitalID = repository.findById(idNumber);
+
+        if (digitalID.getStatus() == newStatus) {
+            throw new ValidationException("Cannot change to the same status");
+        }
 
         digitalID.transitionStatus(newStatus, callerType.name());
 
@@ -147,8 +146,8 @@ public class IdentityManager {
             digitalID.setAddress((String) updates.get(ATTR_ADDRESS));
         if (updates.containsKey(ATTR_NATIONALITY))
             digitalID.setNationality((String) updates.get(ATTR_NATIONALITY));
-        if (updates.containsKey("temporaryRestriction"))
-            digitalID.setTemporaryRestriction((boolean) updates.get("temporaryRestriction"));
+        if (updates.containsKey(ATTR_TEMP_RESTRICTION))
+            digitalID.setTemporaryRestriction((boolean) updates.get(ATTR_TEMP_RESTRICTION));
     }
 
     private void validateRequiredField(Map<String, Object> attributes, String fieldName) {
@@ -173,5 +172,22 @@ public class IdentityManager {
         );
         digitalID.addAuditEntry(entry);
         auditRepository.log(idNumber, entry);
+    }
+
+    private void rejectIfRevoked(DigitalID digitalID, String idNumber) {
+        if (digitalID.getStatus() == IDStatus.REVOKED) {
+            throw new ValidationException(
+                    "Cannot update a REVOKED identity: " + idNumber);
+        }
+    }
+
+    private void rejectIfImmutableFieldTargeted(Map<String, Object> updates) {
+        updates.keySet().stream()
+                .filter(IMMUTABLE_FIELDS::contains)
+                .findFirst()
+                .ifPresent(field -> {
+                    throw new ImmutableFieldException(
+                            "Field cannot be changed after creation: " + field);
+                });
     }
 }
