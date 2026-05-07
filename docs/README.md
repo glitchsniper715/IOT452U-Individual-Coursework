@@ -1,6 +1,6 @@
 # IOT452U — Digital ID Management System
 
-## Section 1: Project Overview
+## Project Overview
 
 This project implements a Digital ID Management System. The system manages the full lifecycle of citizen digital 
 identities: creation, attribute updates, status transitions, and permanent revocation. It also provides a 
@@ -9,7 +9,7 @@ which each can query identity validity according to rules specific to their role
 
 The system is implemented in Java using a Layered Architecture with strict package-level separation. The management capability (writing) and the consumption capability (reading) are structurally isolated into separate sub-packages within the service layer, meaning neither can accidentally import the other. All dependencies are injected through constructors, all storage is abstracted behind repository interfaces, and the domain object enforces its own business rules including a state machine for status transitions.
 
-## Section 2: System Architecture
+## System Architecture
 
 ### Layered Architecture
 The system uses a Layered Architecture. Each package has a single responsibility, and the dependency rule is enforced strictly: higher layers depend on lower layers, never the reverse.
@@ -41,7 +41,7 @@ Each organisation type has its own portal class in the consumption sub-package, 
 | DrivingLicencePortal | DRIVING_AUTHORITY | Eligibility (ACTIVE + no restrictions)     |
 
 
-## Section 3: Design Patterns
+## Design Patterns
 
 ### Repository Pattern (Fowler, 2002)
 `IdentityManager` and `VerificationService` depend on the `IdentityRepository` and `AuditRepository` interfaces, not on the concrete `InMemory` implementations. The backing store can be swapped by changing one line in `Main.java` without touching any service code.
@@ -62,7 +62,7 @@ Each class and each package has one clear reason to change.
 - `VerificationService` owns verification logic. 
 - `AuthorisationService` owns permission checks.
 
-## Section 4: How to Run
+## How to Run
 
 **Prerequisites: Java 17+, Maven 3.8+**
 
@@ -98,22 +98,22 @@ mvn javadoc:javadoc
 ```
 Generated documentation will be at `target/reports/apidocs/index.html`.
 
-## Section 5: Continuous Integration
+## Continuous Integration
 
 The project uses GitHub Actions for continuous integration. Maven tests are automatically executed on every push and pull request.
 
 Workflow runs and build history can be viewed here:
 https://github.com/glitchsniper715/IOT452U-Individual-Coursework/actions/workflows/maven-ci.yml
 
-## Section 6: GitHub Repository
+## GitHub Repository
 
 https://github.com/glitchsniper715/IOT452U-Individual-Coursework
 
-## Section 7: References
+## References
 
 Fowler, M. (2002). *Patterns of enterprise application architecture*. Addison-Wesley.
 
-Fowler, M. (2004). *Inversion of control containers and the dependency injection pattern*. martinfowler.com. https://martinfowler.com/articles/injection.html
+Fowler, M. (2004, May). *Inversion of control containers and the dependency injection pattern*. Martin Fowler. https://martinfowler.com/articles/injection.html
 
 Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1994). *Design patterns: Elements of reusable object-oriented software*. Addison-Wesley.
 
