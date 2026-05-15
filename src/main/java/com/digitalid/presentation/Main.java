@@ -78,7 +78,7 @@ public class Main {
     private static void sessionLoop() {
         while (true) {
             OrganisationType org = pickOrganisation();
-            if (org == null) return; // user chose Exit
+            if (org == null) return;
             mainMenu(org);
         }
     }
@@ -444,7 +444,6 @@ public class Main {
         String input = prompt("  Enter Short ID (e.g. DIG-XXXXX) or full UUID (0 to cancel)");
         if (input.equals("0")) return null;
 
-        // Match on short ID prefix (DIG-XXXXX — 9 chars total)
         if (input.toUpperCase().startsWith("DIG-") && input.length() == 9) {
             String prefix = input.substring(4).toLowerCase();
             for (DigitalID id : all) {
@@ -456,7 +455,6 @@ public class Main {
             return null;
         }
 
-        // Fall back to full UUID
         if (identityRepository.exists(input)) {
             return input;
         }
@@ -474,7 +472,6 @@ public class Main {
             System.out.println("  Address     : " + (id.getAddress().isBlank() ? "—" : id.getAddress()));
             System.out.println("  Nationality : " + (id.getNationality().isBlank() ? "—" : id.getNationality()));
         } catch (IDNotFoundException ignored) {
-            // Caller already validated the ID via pickIdInteractively
         }
     }
 
@@ -572,7 +569,6 @@ public class Main {
         System.out.println("\n  Running demo — this uses separate data and won't affect your");
         System.out.println("  live session.\n");
 
-        // Fresh isolated services so demo output doesn't pollute the live store
         IdentityRepository   demoRepo    = new InMemoryIdentityRepository();
         AuditRepository      demoAudit   = new InMemoryAuditRepository();
         AuthorisationService demoAuth    = new AuthorisationService();
@@ -583,7 +579,6 @@ public class Main {
         TaxAuthorityPortal   demoTaxP    = new TaxAuthorityPortal(demoVerify);
         DrivingLicencePortal demoDriveP  = new DrivingLicencePortal(demoVerify);
 
-        // SCENARIO 1
         System.out.println(TOP);
         System.out.println("  SCENARIO 1: Creating Digital IDs");
         System.out.println("  Only CENTRAL_AUTHORITY may create identities");
@@ -607,7 +602,6 @@ public class Main {
         ), OrganisationType.CENTRAL_AUTHORITY);
         System.out.println("  [ACCEPTED] Central Authority creates Ali Hassan  → ID: " + shortId(idAli));
 
-        // SCENARIO 2
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 2: Unauthorised Creation Attempts");
@@ -625,7 +619,6 @@ public class Main {
             }
         }
 
-        // SCENARIO 3
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 3: Creation With Missing Required Fields");
@@ -645,7 +638,6 @@ public class Main {
             System.out.println("  [REJECTED] Missing dateOfBirth → " + e.getMessage());
         }
 
-        // SCENARIO 4
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 4: Status Transitions");
@@ -680,7 +672,6 @@ public class Main {
             System.out.println("  [REJECTED] Bank attempts to change Jane's status → \n             " + e.getMessage());
         }
 
-        // SCENARIO 5
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 5: Updating Identity Attributes");
@@ -717,7 +708,6 @@ public class Main {
             System.out.println("  [REJECTED] Tax service attempts to update Jane → \n             " + e.getMessage());
         }
 
-        // SCENARIO 6
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 6: Bank & Employer Portal Verification");
@@ -734,7 +724,6 @@ public class Main {
         demoMgr.changeStatus(idJane, IDStatus.ACTIVE, OrganisationType.CENTRAL_AUTHORITY);
         System.out.println("  [ACCEPTED] Jane reactivated for remaining scenarios");
 
-        // SCENARIO 7
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 7: Tax Authority Period-Based Verification");
@@ -756,7 +745,6 @@ public class Main {
         printDemoResult("Tax — suspended+reactivated in period", demoTaxP.verifyForPeriod(idTaxTest, pStart, pEnd));
         printDemoResult("Tax — unknown ID", demoTaxP.verifyForPeriod("UNKNOWN-999", pStart, pEnd));
 
-        // SCENARIO 8
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 8: Driving Licence Eligibility Verification");
@@ -771,7 +759,6 @@ public class Main {
         printDemoResult("Driving — Ali (REVOKED)", demoDriveP.verifyForLicence(idAli));
         printDemoResult("Driving — unknown ID", demoDriveP.verifyForLicence("UNKNOWN-999"));
 
-        // SCENARIO 9
         System.out.println();
         System.out.println(TOP);
         System.out.println("  SCENARIO 9: Management Operations on Non-Existent IDs");
