@@ -1,7 +1,6 @@
 package com.digitalid.infrastructure;
 
 import com.digitalid.domain.DigitalID;
-import com.digitalid.domain.IDStatus;
 import com.digitalid.exception.IDNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,14 +11,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryIdentityRepositoryTest {
 
-    // Declared as the INTERFACE type to test the contract, not the implementation
     private IdentityRepository repository;
     private DigitalID testDigitalID;
     private static final String TEST_ID_NUMBER = "DIG-REPO-001";
 
     @BeforeEach
     void setUp() {
-        // Fresh repository before every test so tests do not interfere with each other
         repository = new InMemoryIdentityRepository();
 
         testDigitalID = new DigitalID(
@@ -37,8 +34,6 @@ class InMemoryIdentityRepositoryTest {
         repository.save(testDigitalID);
 
         DigitalID retrieved = repository.findById(TEST_ID_NUMBER);
-
-        // Same object reference - the HashMap returns exactly what was stored
         assertSame(testDigitalID, retrieved);
     }
 
@@ -63,7 +58,6 @@ class InMemoryIdentityRepositoryTest {
 
     @Test
     void findById_throwsIDNotFoundException_forUnknownIdNumber() {
-        // Repository is empty - nothing has been saved
         assertThrows(IDNotFoundException.class,
                 () -> repository.findById("UNKNOWN-999"));
     }
@@ -88,7 +82,6 @@ class InMemoryIdentityRepositoryTest {
 
     @Test
     void exists_returnsFalse_forUnknownIdNumber() {
-        // Nothing saved yet
         assertFalse(repository.exists("DIG-NEVER-SAVED"));
     }
 
